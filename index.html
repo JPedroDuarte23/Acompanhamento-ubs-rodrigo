@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UBS Acolhimento • Sistema de Triagem</title>
+<style>
+:root{
+  --green:#0e7c70;--green2:#12a08f;--navy:#203247;--bg:#eef3f4;--card:#fff;
+  --muted:#6b7785;--line:#d9e2e5;--danger:#b94343;--warning:#d18b00;
+  --blue:#2f6fab;--purple:#7d57a8;--black:#20252a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#202a33}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+
+#loginView{
+  min-height:100vh;display:grid;place-items:center;padding:24px;
+  background:linear-gradient(135deg,#0b685f,#0e7c70 50%,#1f5268);
+}
+.login-card{
+  width:min(460px,100%);background:#fff;border-radius:18px;padding:28px;
+  box-shadow:0 22px 60px rgba(0,0,0,.25)
+}
+.brand{display:flex;gap:14px;align-items:center;margin-bottom:20px}
+.logo{width:52px;height:52px;border-radius:14px;background:var(--green);color:#fff;display:grid;place-items:center;font-size:26px;font-weight:800}
+.login-card h1{font-size:23px;margin:0}
+.login-card p{color:var(--muted);line-height:1.45}
+label{display:block;font-weight:700;margin-top:12px}
+input,select,textarea{
+  width:100%;padding:10px 11px;border:1px solid #c9d4d8;border-radius:8px;background:#fff;margin-top:5px
+}
+textarea{min-height:86px;resize:vertical}
+.btn{border:0;border-radius:9px;padding:10px 14px;font-weight:700}
+.primary{background:var(--green);color:#fff}
+.secondary{background:var(--navy);color:#fff}
+.light{background:#e9eef0;color:var(--navy)}
+.danger{background:var(--danger);color:#fff}
+.full{width:100%;margin-top:16px}
+
+#app{min-height:100vh}
+.topbar{
+  position:sticky;top:0;z-index:20;background:var(--navy);color:#fff;
+  display:flex;align-items:center;justify-content:space-between;padding:13px 18px;box-shadow:0 2px 10px rgba(0,0,0,.15)
+}
+.topbar .title{font-weight:800}
+.topbar .sub{font-size:12px;opacity:.8}
+.userbox{display:flex;align-items:center;gap:10px}
+.layout{display:grid;grid-template-columns:235px 1fr;min-height:calc(100vh - 64px)}
+.sidebar{background:#fff;border-right:1px solid var(--line);padding:14px;position:sticky;top:64px;height:calc(100vh - 64px)}
+.navbtn{
+  width:100%;text-align:left;border:0;background:transparent;padding:11px 12px;border-radius:9px;
+  margin:3px 0;font-weight:700;color:#354451
+}
+.navbtn.active,.navbtn:hover{background:#e8f5f2;color:var(--green)}
+.content{padding:22px;max-width:1500px;width:100%;margin:auto}
+.view{display:none}
+.view.active{display:block}
+.page-title{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:16px}
+.page-title h2{margin:0;color:var(--green)}
+.card{
+  background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;
+  box-shadow:0 2px 8px rgba(31,50,71,.06);margin-bottom:16px
+}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.metric{padding:18px}
+.metric .num{font-size:30px;font-weight:800;color:var(--navy)}
+.metric .lbl{color:var(--muted);font-size:13px;margin-top:4px}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:10px}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:780px}
+th{background:var(--navy);color:#fff;padding:10px;text-align:left}
+td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:hover td{background:#fafcfc}
+.small{font-size:12px;color:var(--muted)}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;font-size:12px;font-weight:800}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.risk-azul{background:#e7f1fb;color:#205a8d}.risk-verde{background:#e5f5ed;color:#216a48}
+.risk-amarelo{background:#fff5cf;color:#8b6800}.risk-laranja{background:#ffead7;color:#9b4f00}
+.risk-vermelho{background:#fde4e4;color:#932f2f}.risk-nao{background:#eceff1;color:#59636d}
+.section-title{border-left:5px solid var(--green2);padding-left:10px;color:var(--green);margin-top:4px}
+.protocol-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.protocol-meta div{background:#f7fafb;border:1px solid var(--line);padding:12px;border-radius:9px}
+.protocol-meta b{color:var(--green)}
+.quote{padding:12px;border-left:5px solid var(--green2);background:#ebf8f4;border-radius:6px;font-style:italic}
+.warn{padding:12px;border-left:5px solid #d18b00;background:#fff7df;border-radius:7px}
+.checks label{font-weight:400;display:flex;gap:8px;align-items:flex-start;margin:7px 0}
+.checks input{width:auto;margin-top:2px}
+.route-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.route{border:1px solid var(--line);border-radius:10px;padding:14px;background:#fafcfc}
+.route h4{margin:0 0 8px;color:var(--green)}
+.modal{
+  position:fixed;inset:0;background:rgba(20,30,40,.55);display:grid;place-items:center;padding:20px;z-index:100
+}
+.modal-box{background:#fff;width:min(850px,100%);max-height:90vh;overflow:auto;border-radius:14px;padding:20px}
+.close{float:right;border:0;background:#edf1f2;border-radius:8px;padding:7px 10px}
+hr{border:0;border-top:1px solid var(--line);margin:18px 0}
+footer{color:var(--muted);font-size:12px;text-align:center;padding:16px}
+@media(max-width:1050px){.cards{grid-template-columns:repeat(2,1fr)}.grid5{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:800px){
+ .layout{grid-template-columns:1fr}.sidebar{position:static;height:auto;display:flex;overflow:auto;gap:5px;border-right:0;border-bottom:1px solid var(--line)}
+ .navbtn{min-width:max-content;width:auto}.content{padding:14px}.grid2,.grid3,.protocol-meta,.route-grid{grid-template-columns:1fr}
+}
+@media(max-width:520px){.cards,.grid5{grid-template-columns:1fr}.topbar{align-items:flex-start}.userbox{font-size:12px}}
+@media print{
+  .topbar,.sidebar,.no-print,.actions{display:none!important}
+  .layout{display:block}.content{padding:0}.view{display:none!important}
+  #printArea{display:block!important}.card{box-shadow:none;border:0}
+  body{background:#fff}
+}
+</style>
+</head>
+<body>
+
+<div id="loginView">
+  <div class="login-card">
+    <div class="brand">
+      <div class="logo">UBS</div>
+      <div><h1>Sistema de Acolhimento e Triagem</h1><div class="small">Protótipo local • uso educacional/operacional</div></div>
+    </div>
+    <p>Esta versão funciona integralmente no navegador e mantém os dados no próprio dispositivo. Não substitui prontuário eletrônico oficial, autenticação institucional ou protocolo clínico local.</p>
+    <label>Nome do profissional
+      <input id="loginName" placeholder="Ex.: Ana Souza">
+    </label>
+    <label>Registro / identificação
+      <input id="loginReg" placeholder="Ex.: COREN 000000">
+    </label>
+    <label>Perfil
+      <select id="loginRole">
+        <option>Enfermeiro(a)</option>
+        <option>Técnico(a) de Enfermagem</option>
+      </select>
+    </label>
+    <button class="btn primary full" onclick="entrar()">Entrar no sistema</button>
+  </div>
+</div>
+
+<div id="app" class="hidden">
+  <div class="topbar">
+    <div><div class="title">UBS • Acolhimento e Triagem</div><div class="sub">Protocolo clínica-comportamental de escuta e triagem</div></div>
+    <div class="userbox"><span id="userLabel"></span><button class="btn light" onclick="sair()">Sair</button></div>
+  </div>
+
+  <div class="layout">
+    <aside class="sidebar no-print">
+      <button class="navbtn active" data-view="dashboard">▦ Dashboard</button>
+      <button class="navbtn" data-view="pacientes">👤 Pacientes</button>
+      <button class="navbtn" data-view="triagem">🩺 Nova Triagem</button>
+      <button class="navbtn" data-view="historico">🗂 Histórico</button>
+      <button class="navbtn" data-view="protocolo">📘 Protocolo</button>
+      <button class="navbtn" data-view="dados">💾 Dados</button>
+    </aside>
+
+    <main class="content">
+      <section id="dashboard" class="view active">
+        <div class="page-title"><h2>Dashboard</h2><span class="small" id="todayLabel"></span></div>
+        <div class="cards">
+          <div class="card metric"><div class="num" id="mPac">0</div><div class="lbl">Pacientes cadastrados</div></div>
+          <div class="card metric"><div class="num" id="mTri">0</div><div class="lbl">Triagens registradas</div></div>
+          <div class="card metric"><div class="num" id="mHoje">0</div><div class="lbl">Triagens hoje</div></div>
+          <div class="card metric"><div class="num" id="mPend">0</div><div class="lbl">Registros sem classificação</div></div>
+        </div>
+        <div class="card">
+          <h3 class="section-title">Últimas triagens</h3>
+          <div class="tablewrap">
+            <table>
+              <thead><tr><th>Data</th><th>Paciente</th><th>Queixa</th><th>Classificação</th><th>Profissional</th></tr></thead>
+              <tbody id="dashRows"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="pacientes" class="view">
+        <div class="page-title"><h2>Pacientes</h2><button class="btn primary" onclick="abrirPaciente()">+ Novo paciente</button></div>
+        <div class="card">
+          <div class="grid2">
+            <label>Buscar paciente<input id="patientSearch" oninput="renderPatients()" placeholder="Nome, prontuário ou documento"></label>
+            <label>Ordenar
+              <select id="patientSort" onchange="renderPatients()">
+                <option value="name">Nome</option><option value="recent">Mais recentes</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        <div class="card tablewrap">
+          <table>
+            <thead><tr><th>Prontuário</th><th>Nome</th><th>Nascimento</th><th>Documento/CNS</th><th>Telefone</th><th>Ações</th></tr></thead>
+            <tbody id="patientRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="triagem" class="view">
+        <div class="page-title"><h2>Nova Triagem</h2><span class="badge risk-nao">Registro clínico estruturado</span></div>
+        <div class="card">
+          <div class="grid2">
+            <label>Paciente
+              <select id="triPatient"><option value="">Selecione...</option></select>
+            </label>
+            <label>Data e hora<input id="triDateTime" type="datetime-local"></label>
+          </div>
+          <div class="grid2">
+            <label>Profissional<input id="triProf" readonly></label>
+            <label>Registro<input id="triReg" readonly></label>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="section-title">Avaliação fisiológica rápida</h3>
+          <div class="grid5">
+            <label>PA<input id="pa" placeholder="120x80 mmHg"></label>
+            <label>FC<input id="fc" type="number" placeholder="bpm"></label>
+            <label>SpO₂<input id="spo2" type="number" placeholder="%"></label>
+            <label>Temperatura<input id="temp" type="number" step="0.1" placeholder="°C"></label>
+            <label>Glicemia<input id="glicemia" type="number" placeholder="mg/dL"></label>
+          </div>
+          <label>Queixa subjetiva<textarea id="queixa" placeholder="Registrar exatamente o que o usuário relata, com linguagem neutra."></textarea></label>
+        </div>
+
+        <div class="card">
+          <h3 class="section-title">Classificação de risco</h3>
+          <div class="warn"><b>Importante:</b> o protocolo fornecido não define critérios automáticos por cor. Portanto, a classificação abaixo é <b>manual</b> e deve seguir o protocolo institucional/local vigente.</div>
+          <div class="grid2">
+            <label>Classificação
+              <select id="risk">
+                <option value="nao">Não classificado</option>
+                <option value="azul">Azul</option>
+                <option value="verde">Verde</option>
+                <option value="amarelo">Amarelo</option>
+                <option value="laranja">Laranja</option>
+                <option value="vermelho">Vermelho</option>
+              </select>
+            </label>
+            <label>Justificativa da classificação<textarea id="riskNote" placeholder="Registrar justificativa clínica conforme protocolo local."></textarea></label>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="section-title">Módulos de Conduta Rápida</h3>
+          <div class="route-grid">
+            <div class="route"><h4>Módulo A • Demanda Laboral / Atestado</h4>
+              <div class="checks"><label><input type="checkbox" id="aPres"> Fisiologia preservada / sem dor aguda mensurável no momento.</label></div>
+              <div class="quote">“Triagem realizada. Sinais vitais normais. Registrada a queixa relatada de [descrever queixa]. Aguarda atendimento médico para avaliação de incapacidade.”</div>
+            </div>
+            <div class="route"><h4>Módulo B • Absenteísmo</h4>
+              <div class="checks">
+                <label><input type="checkbox" class="bMot" value="Dificuldade laboral"> Dificuldade laboral</label>
+                <label><input type="checkbox" class="bMot" value="Mobilidade / custo de transporte"> Mobilidade / custo de transporte</label>
+                <label><input type="checkbox" class="bMot" value="Afetivo / medo do procedimento"> Afetivo / medo do procedimento</label>
+                <label><input type="checkbox" class="bMot" value="Falha de comunicação"> Falha de comunicação / não soube da data</label>
+                <label><input type="checkbox" class="bEnc" value="Reagendamento efetuado"> Reagendamento efetuado</label>
+                <label><input type="checkbox" class="bEnc" value="Alerta enviado ao ACS"> Alerta enviado ao ACS</label>
+              </div>
+            </div>
+            <div class="route"><h4>Módulo C • Apoio à Adesão</h4>
+              <label>Exame/procedimento recusado<input id="proc"></label>
+              <div class="checks">
+                <label><input type="checkbox" class="cMot" value="Medo de dor / procedimento invasivo"> Medo de dor / procedimento invasivo</label>
+                <label><input type="checkbox" class="cMot" value="Vergonha / tabu cultural / religioso"> Vergonha / tabu cultural / religioso</label>
+                <label><input type="checkbox" class="cEnc" value="Escuta em Enfermagem agendada"> Escuta em Enfermagem agendada</label>
+                <label><input type="checkbox" class="cEnc" value="Orientação de Educação em Saúde aplicada"> Educação em Saúde aplicada</label>
+              </div>
+            </div>
+          </div>
+          <label>Conduta / encaminhamento complementar<textarea id="conduct"></textarea></label>
+          <div class="actions">
+            <button class="btn primary" onclick="saveTriage()">Salvar triagem</button>
+            <button class="btn light" onclick="clearTriage()">Limpar</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="historico" class="view">
+        <div class="page-title"><h2>Histórico de Triagens</h2></div>
+        <div class="card">
+          <div class="grid3">
+            <label>Buscar<input id="histSearch" oninput="renderHistory()" placeholder="Paciente, queixa ou profissional"></label>
+            <label>Classificação
+              <select id="histRisk" onchange="renderHistory()">
+                <option value="">Todas</option><option value="nao">Não classificado</option><option value="azul">Azul</option>
+                <option value="verde">Verde</option><option value="amarelo">Amarelo</option><option value="laranja">Laranja</option><option value="vermelho">Vermelho</option>
+              </select>
+            </label>
+            <label>Data<input id="histDate" type="date" onchange="renderHistory()"></label>
+          </div>
+        </div>
+        <div class="card tablewrap">
+          <table>
+            <thead><tr><th>Data</th><th>Paciente</th><th>Queixa</th><th>Risco</th><th>Profissional</th><th>Ações</th></tr></thead>
+            <tbody id="historyRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="protocolo" class="view">
+        <div class="page-title"><h2>Protocolo de Referência</h2></div>
+        <div class="card">
+          <div class="protocol-meta">
+            <div><b>Público-alvo</b><br>Enfermeiros e Técnicos de Enfermagem</div>
+            <div><b>Aplicação</b><br>Triagem e Acolhimento Técnico</div>
+            <div><b>Base legal indicada no documento</b><br>Res. COFEN 661/2021 | PNH - SUS</div>
+          </div>
+        </div>
+        <div class="card">
+          <h3 class="section-title">1. Matriz de reenquadramento da comunicação</h3>
+          <div class="tablewrap">
+            <table>
+              <thead><tr><th>Cenário</th><th>Vício a eliminar</th><th>Barreira invisível</th><th>Abordagem a adotar</th></tr></thead>
+              <tbody>
+                <tr><td><b>Busca por atestado / sintoma não evidente</b></td><td>“Você não tem nada, só veio buscar atestado para não trabalhar hoje.”</td><td>Exaustão psíquica, medo de demissão, dificuldade de verbalizar sofrimento mental ou sintoma paroxístico cediço.</td><td>Compreender a necessidade de justificar ausência, avaliar sinais vitais/sintomas atuais, registrar a queixa e encaminhar para ato médico.</td></tr>
+                <tr><td><b>Paciente faltoso</b></td><td>“Você perdeu a vaga de meses. Depois piora e vem reclamar aqui no posto.”</td><td>Analfabetismo funcional, transporte, jornada laboral, medo do diagnóstico.</td><td>Investigar imprevistos e tentar ajustar novo agendamento à rotina.</td></tr>
+                <tr><td><b>Resistência a exames preventivos</b></td><td>“Se não quiser fazer o exame/coleta, a responsabilidade é sua. Assine o termo de recusa.”</td><td>Trauma prévio, vergonha, tabus culturais/religiosos.</td><td>Explicar o procedimento, acolher o receio e pactuar novo momento sem coerção.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <h3 class="section-title">2. Algoritmo de tomada de decisão neutra</h3>
+          <div class="route-grid">
+            <div class="route"><h4>ROTA A • Atestado</h4><p>Aferir sinais vitais + emitir ficha com registro neutro da queixa + encaminhar ao ato médico.</p></div>
+            <div class="route"><h4>ROTA B • Absenteísmo</h4><p>Investigar causa raiz socioeconômica + notificar eSF/ACS + reagendar sem penalidade.</p></div>
+            <div class="route"><h4>ROTA C • Resistência</h4><p>Realizar Educação em Saúde Expressa + pactuar novo momento sem coercitividade.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="dados" class="view">
+        <div class="page-title"><h2>Dados e Backup</h2></div>
+        <div class="card">
+          <h3 class="section-title">Armazenamento local</h3>
+          <p>Os registros desta versão são armazenados no navegador usando <b>IndexedDB</b>. Não existe servidor, nuvem ou sincronização automática.</p>
+          <div class="actions">
+            <button class="btn secondary" onclick="exportJSON()">Exportar backup JSON</button>
+            <button class="btn light" onclick="document.getElementById('importFile').click()">Importar backup JSON</button>
+            <input id="importFile" class="hidden" type="file" accept=".json,application/json" onchange="importJSON(event)">
+            <button class="btn light" onclick="exportCSV()">Exportar triagens CSV</button>
+            <button class="btn danger" onclick="wipeDatabase()">Apagar todos os dados locais</button>
+          </div>
+        </div>
+        <div class="card warn">
+          Para uso real em serviço de saúde, esta versão precisa ser integrada a infraestrutura institucional com autenticação segura, perfis de acesso, trilha de auditoria, backup, criptografia, política de retenção e requisitos de privacidade/LGPD.
+        </div>
+      </section>
+
+      <section id="printArea" class="view"></section>
+      <footer>Protótipo funcional local • baseado no protocolo fornecido • classificação de risco manual conforme protocolo institucional</footer>
+    </main>
+  </div>
+</div>
+
+<div id="patientModal" class="modal hidden">
+  <div class="modal-box">
+    <button class="close" onclick="closePatientModal()">✕</button>
+    <h3 id="patientModalTitle">Novo paciente</h3>
+    <input id="pId" type="hidden">
+    <div class="grid2">
+      <label>Prontuário<input id="pRecord" placeholder="Ex.: UBS-0001"></label>
+      <label>Nome completo<input id="pName"></label>
+      <label>Data de nascimento<input id="pBirth" type="date"></label>
+      <label>Documento / CNS<input id="pDoc"></label>
+      <label>Telefone<input id="pPhone"></label>
+      <label>Observação administrativa<input id="pNote"></label>
+    </div>
+    <div class="actions">
+      <button class="btn primary" onclick="savePatient()">Salvar</button>
+      <button class="btn light" onclick="closePatientModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div id="detailModal" class="modal hidden">
+  <div class="modal-box">
+    <button class="close" onclick="closeDetail()">✕</button>
+    <div id="detailBody"></div>
+    <div class="actions">
+      <button class="btn secondary" onclick="printCurrentDetail()">Imprimir / Salvar PDF</button>
+      <button class="btn light" onclick="closeDetail()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DB_NAME='UBS_Acolhimento_DB_v2', DB_VERSION=1;
+let db=null, currentUser=null, currentDetailHTML='';
+
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function nowLocal(){
+  const d=new Date(), pad=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function dateBR(v){
+  if(!v) return '—'; const d=new Date(v);
+  if(isNaN(d)) return esc(v);
+  return d.toLocaleString('pt-BR');
+}
+function dateOnlyBR(v){
+  if(!v) return '—'; const [y,m,d]=v.split('-'); return `${d}/${m}/${y}`;
+}
+function riskBadge(r){
+  const map={nao:'Não classificado',azul:'Azul',verde:'Verde',amarelo:'Amarelo',laranja:'Laranja',vermelho:'Vermelho'};
+  return `<span class="badge risk-${r||'nao'}">${map[r||'nao']}</span>`;
+}
+function vals(sel){return [...document.querySelectorAll(sel+':checked')].map(x=>x.value)}
+
+function initDB(){
+ return new Promise((resolve,reject)=>{
+   const req=indexedDB.open(DB_NAME,DB_VERSION);
+   req.onupgradeneeded=e=>{
+     const d=e.target.result;
+     if(!d.objectStoreNames.contains('patients')) d.createObjectStore('patients',{keyPath:'id',autoIncrement:true});
+     if(!d.objectStoreNames.contains('triages')) d.createObjectStore('triages',{keyPath:'id',autoIncrement:true});
+   };
+   req.onsuccess=e=>{db=e.target.result;resolve()};
+   req.onerror=()=>reject(req.error);
+ });
+}
+function store(name,mode='readonly'){return db.transaction(name,mode).objectStore(name)}
+function getAll(name){return new Promise((res,rej)=>{const r=store(name).getAll();r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+function getOne(name,id){return new Promise((res,rej)=>{const r=store(name).get(Number(id));r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+function put(name,obj){return new Promise((res,rej)=>{const r=store(name,'readwrite').put(obj);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+function add(name,obj){return new Promise((res,rej)=>{const r=store(name,'readwrite').add(obj);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+function del(name,id){return new Promise((res,rej)=>{const r=store(name,'readwrite').delete(Number(id));r.onsuccess=()=>res();r.onerror=()=>rej(r.error)})}
+function clearStore(name){return new Promise((res,rej)=>{const r=store(name,'readwrite').clear();r.onsuccess=()=>res();r.onerror=()=>rej(r.error)})}
+
+async function entrar(){
+  const name=document.getElementById('loginName').value.trim();
+  const reg=document.getElementById('loginReg').value.trim();
+  if(!name||!reg){alert('Informe nome e registro do profissional.');return}
+  currentUser={name,reg,role:document.getElementById('loginRole').value};
+  sessionStorage.setItem('ubsUser',JSON.stringify(currentUser));
+  document.getElementById('loginView').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  hydrateUser();
+  await refreshAll();
+}
+function sair(){
+  sessionStorage.removeItem('ubsUser'); currentUser=null;
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('loginView').classList.remove('hidden');
+}
+function hydrateUser(){
+  document.getElementById('userLabel').textContent=`${currentUser.name} • ${currentUser.role}`;
+  document.getElementById('triProf').value=currentUser.name;
+  document.getElementById('triReg').value=currentUser.reg;
+}
+document.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.navbtn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById(b.dataset.view).classList.add('active');
+  if(b.dataset.view==='dashboard') renderDashboard();
+  if(b.dataset.view==='pacientes') renderPatients();
+  if(b.dataset.view==='historico') renderHistory();
+});
+
+function abrirPaciente(id){
+  document.getElementById('patientModal').classList.remove('hidden');
+  ['pId','pRecord','pName','pBirth','pDoc','pPhone','pNote'].forEach(x=>document.getElementById(x).value='');
+  document.getElementById('patientModalTitle').textContent='Novo paciente';
+  if(id) getOne('patients',id).then(p=>{
+    document.getElementById('patientModalTitle').textContent='Editar paciente';
+    document.getElementById('pId').value=p.id;
+    document.getElementById('pRecord').value=p.record||'';
+    document.getElementById('pName').value=p.name||'';
+    document.getElementById('pBirth').value=p.birth||'';
+    document.getElementById('pDoc').value=p.doc||'';
+    document.getElementById('pPhone').value=p.phone||'';
+    document.getElementById('pNote').value=p.note||'';
+  });
+}
+function closePatientModal(){document.getElementById('patientModal').classList.add('hidden')}
+async function savePatient(){
+  const name=document.getElementById('pName').value.trim();
+  if(!name){alert('Informe o nome do paciente.');return}
+  const obj={
+    record:document.getElementById('pRecord').value.trim(),
+    name,
+    birth:document.getElementById('pBirth').value,
+    doc:document.getElementById('pDoc').value.trim(),
+    phone:document.getElementById('pPhone').value.trim(),
+    note:document.getElementById('pNote').value.trim(),
+    updatedAt:new Date().toISOString()
+  };
+  const id=document.getElementById('pId').value;
+  if(id){obj.id=Number(id); await put('patients',obj)} else {obj.createdAt=new Date().toISOString();await add('patients',obj)}
+  closePatientModal(); await refreshAll(); showView('pacientes');
+}
+async function removePatient(id){
+  const ts=await getAll('triages');
+  if(ts.some(t=>t.patientId===Number(id))){alert('Este paciente possui triagens registradas e não pode ser excluído nesta versão.');return}
+  if(confirm('Excluir este paciente?')){await del('patients',id);await refreshAll()}
+}
+async function renderPatients(){
+  let ps=await getAll('patients');
+  const q=(document.getElementById('patientSearch').value||'').toLowerCase();
+  ps=ps.filter(p=>[p.name,p.record,p.doc].join(' ').toLowerCase().includes(q));
+  if(document.getElementById('patientSort').value==='recent') ps.sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||''));
+  else ps.sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
+  document.getElementById('patientRows').innerHTML=ps.length?ps.map(p=>`
+    <tr><td>${esc(p.record||'—')}</td><td><b>${esc(p.name)}</b></td><td>${dateOnlyBR(p.birth)}</td>
+    <td>${esc(p.doc||'—')}</td><td>${esc(p.phone||'—')}</td>
+    <td><button class="btn light" onclick="abrirPaciente(${p.id})">Editar</button>
+    <button class="btn danger" onclick="removePatient(${p.id})">Excluir</button></td></tr>`).join(''):
+    `<tr><td colspan="6">Nenhum paciente encontrado.</td></tr>`;
+}
+async function fillPatientSelect(){
+  const ps=(await getAll('patients')).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
+  document.getElementById('triPatient').innerHTML='<option value="">Selecione...</option>'+ps.map(p=>`<option value="${p.id}">${esc(p.name)}${p.record?' • '+esc(p.record):''}</option>`).join('');
+}
+
+async function saveTriage(){
+  const patientId=Number(document.getElementById('triPatient').value);
+  if(!patientId){alert('Selecione um paciente.');return}
+  const patient=await getOne('patients',patientId);
+  const obj={
+    patientId, patientName:patient.name, patientRecord:patient.record||'',
+    datetime:document.getElementById('triDateTime').value||nowLocal(),
+    professional:currentUser.name, professionalReg:currentUser.reg, role:currentUser.role,
+    vitals:{
+      pa:document.getElementById('pa').value.trim(),fc:document.getElementById('fc').value,
+      spo2:document.getElementById('spo2').value,temp:document.getElementById('temp').value,
+      glicemia:document.getElementById('glicemia').value
+    },
+    complaint:document.getElementById('queixa').value.trim(),
+    risk:document.getElementById('risk').value,
+    riskNote:document.getElementById('riskNote').value.trim(),
+    moduleA:{preserved:document.getElementById('aPres').checked},
+    moduleB:{reasons:vals('.bMot'),actions:vals('.bEnc')},
+    moduleC:{procedure:document.getElementById('proc').value.trim(),reasons:vals('.cMot'),actions:vals('.cEnc')},
+    conduct:document.getElementById('conduct').value.trim(),
+    createdAt:new Date().toISOString()
+  };
+  await add('triages',obj);
+  alert('Triagem salva com sucesso.');
+  clearTriage(); await refreshAll(); showView('historico');
+}
+function clearTriage(){
+  document.getElementById('triDateTime').value=nowLocal();
+  document.getElementById('triPatient').value='';
+  ['pa','fc','spo2','temp','glicemia','queixa','riskNote','proc','conduct'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('risk').value='nao';
+  document.querySelectorAll('#triagem input[type=checkbox]').forEach(x=>x.checked=false);
+}
+async function renderHistory(){
+  let ts=await getAll('triages');
+  const q=(document.getElementById('histSearch').value||'').toLowerCase();
+  const r=document.getElementById('histRisk').value;
+  const d=document.getElementById('histDate').value;
+  ts=ts.filter(t=>{
+    const hay=[t.patientName,t.complaint,t.professional].join(' ').toLowerCase();
+    return (!q||hay.includes(q))&&(!r||t.risk===r)&&(!d||(t.datetime||'').startsWith(d));
+  }).sort((a,b)=>(b.datetime||'').localeCompare(a.datetime||''));
+  document.getElementById('historyRows').innerHTML=ts.length?ts.map(t=>`
+    <tr><td>${dateBR(t.datetime)}</td><td><b>${esc(t.patientName)}</b><div class="small">${esc(t.patientRecord||'')}</div></td>
+    <td>${esc(t.complaint||'—')}</td><td>${riskBadge(t.risk)}</td><td>${esc(t.professional)}</td>
+    <td><button class="btn light" onclick="showDetail(${t.id})">Ver</button>
+    <button class="btn danger" onclick="removeTriage(${t.id})">Excluir</button></td></tr>`).join(''):
+    `<tr><td colspan="6">Nenhuma triagem encontrada.</td></tr>`;
+}
+async function removeTriage(id){
+  if(confirm('Excluir esta triagem?')){await del('triages',id);await refreshAll()}
+}
+async function showDetail(id){
+  const t=await getOne('triages',id);
+  currentDetailHTML=triageHTML(t);
+  document.getElementById('detailBody').innerHTML=currentDetailHTML;
+  document.getElementById('detailModal').classList.remove('hidden');
+}
+function closeDetail(){document.getElementById('detailModal').classList.add('hidden')}
+function triageHTML(t){
+  const v=t.vitals||{}, B=t.moduleB||{}, C=t.moduleC||{}, A=t.moduleA||{};
+  return `<h2 style="color:#0e7c70">Ficha de Triagem de Enfermagem</h2>
+  <p><b>Paciente:</b> ${esc(t.patientName)} ${t.patientRecord?`• Prontuário ${esc(t.patientRecord)}`:''}</p>
+  <p><b>Data/Hora:</b> ${dateBR(t.datetime)}<br><b>Profissional:</b> ${esc(t.professional)} • ${esc(t.professionalReg||'')}</p>
+  <hr><h3>Sinais vitais</h3>
+  <p>PA: ${esc(v.pa||'—')} | FC: ${esc(v.fc||'—')} bpm | SpO₂: ${esc(v.spo2||'—')}% | Temp: ${esc(v.temp||'—')} °C | Glicemia: ${esc(v.glicemia||'—')} mg/dL</p>
+  <p><b>Queixa subjetiva:</b> ${esc(t.complaint||'—')}</p>
+  <p><b>Classificação de risco:</b> ${riskBadge(t.risk)}<br><span class="small">Classificação manual conforme protocolo institucional.</span></p>
+  <p><b>Justificativa:</b> ${esc(t.riskNote||'—')}</p>
+  <hr><h3>Módulos</h3>
+  <p><b>Módulo A:</b> ${A.preserved?'Fisiologia preservada / sem dor aguda mensurável no momento.':'Não marcado.'}</p>
+  <p><b>Módulo B — motivos:</b> ${esc((B.reasons||[]).join(', ')||'—')}<br><b>Encaminhamentos:</b> ${esc((B.actions||[]).join(', ')||'—')}</p>
+  <p><b>Módulo C — procedimento recusado:</b> ${esc(C.procedure||'—')}<br><b>Motivos:</b> ${esc((C.reasons||[]).join(', ')||'—')}<br><b>Encaminhamentos:</b> ${esc((C.actions||[]).join(', ')||'—')}</p>
+  <p><b>Conduta complementar:</b> ${esc(t.conduct||'—')}</p>`;
+}
+function printCurrentDetail(){
+  document.getElementById('printArea').innerHTML='<div class="card">'+currentDetailHTML+'</div>';
+  closeDetail(); window.print();
+}
+
+async function renderDashboard(){
+  const ps=await getAll('patients'), ts=await getAll('triages');
+  const today=new Date().toISOString().slice(0,10);
+  document.getElementById('mPac').textContent=ps.length;
+  document.getElementById('mTri').textContent=ts.length;
+  document.getElementById('mHoje').textContent=ts.filter(t=>(t.datetime||'').startsWith(today)).length;
+  document.getElementById('mPend').textContent=ts.filter(t=>(t.risk||'nao')==='nao').length;
+  const recent=ts.sort((a,b)=>(b.datetime||'').localeCompare(a.datetime||'')).slice(0,8);
+  document.getElementById('dashRows').innerHTML=recent.length?recent.map(t=>`
+  <tr><td>${dateBR(t.datetime)}</td><td>${esc(t.patientName)}</td><td>${esc(t.complaint||'—')}</td><td>${riskBadge(t.risk)}</td><td>${esc(t.professional)}</td></tr>`).join(''):
+  '<tr><td colspan="5">Ainda não há triagens registradas.</td></tr>';
+}
+function showView(id){
+  document.querySelectorAll('.navbtn').forEach(x=>x.classList.toggle('active',x.dataset.view===id));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+async function exportJSON(){
+  const data={version:2,exportedAt:new Date().toISOString(),patients:await getAll('patients'),triages:await getAll('triages')};
+  downloadBlob(JSON.stringify(data,null,2),'backup_ubs_acolhimento.json','application/json');
+}
+async function importJSON(ev){
+  const file=ev.target.files[0]; if(!file)return;
+  try{
+    const data=JSON.parse(await file.text());
+    if(!Array.isArray(data.patients)||!Array.isArray(data.triages)) throw new Error('Formato inválido');
+    if(!confirm('A importação substituirá todos os dados locais atuais. Continuar?')) return;
+    await clearStore('patients'); await clearStore('triages');
+    for(const p of data.patients) await put('patients',p);
+    for(const t of data.triages) await put('triages',t);
+    await refreshAll(); alert('Backup importado.');
+  }catch(e){alert('Não foi possível importar: '+e.message)}
+  ev.target.value='';
+}
+async function exportCSV(){
+  const ts=await getAll('triages');
+  const rows=[['Data/Hora','Paciente','Prontuario','Queixa','Risco','Profissional','Registro']];
+  ts.forEach(t=>rows.push([t.datetime,t.patientName,t.patientRecord,t.complaint,t.risk,t.professional,t.professionalReg]));
+  const csv=rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(';')).join('\n');
+  downloadBlob('\ufeff'+csv,'triagens_ubs.csv','text/csv;charset=utf-8');
+}
+function downloadBlob(content,name,type){
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;a.click();URL.revokeObjectURL(a.href)
+}
+async function wipeDatabase(){
+  if(confirm('ATENÇÃO: apagar definitivamente todos os pacientes e triagens armazenados neste navegador?')){
+    await clearStore('patients');await clearStore('triages');await refreshAll();alert('Dados locais apagados.');
+  }
+}
+async function refreshAll(){await fillPatientSelect();await renderPatients();await renderHistory();await renderDashboard()}
+(async()=>{
+  await initDB();
+  document.getElementById('todayLabel').textContent=new Date().toLocaleDateString('pt-BR',{dateStyle:'full'});
+  document.getElementById('triDateTime').value=nowLocal();
+  const saved=sessionStorage.getItem('ubsUser');
+  if(saved){
+    currentUser=JSON.parse(saved);
+    document.getElementById('loginView').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
+    hydrateUser(); await refreshAll();
+  }
+})();
+</script>
+</body>
+</html>
